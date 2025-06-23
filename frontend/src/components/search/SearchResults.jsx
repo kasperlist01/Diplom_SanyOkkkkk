@@ -250,7 +250,7 @@ const SearchResults = ({ data, loading, error }) => {
         <GlassResultsCard>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
                 <ResultsTitle level={3} style={{ margin: 0 }}>
-                    Найдено предприятий: {data.total} (показано: {data.companies.length})
+                    Найдено предприятий: {data.total}
                 </ResultsTitle>
                 <ClearButton
                     icon={<ClearOutlined />}

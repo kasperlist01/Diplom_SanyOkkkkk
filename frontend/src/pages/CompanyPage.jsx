@@ -1,3 +1,4 @@
+// frontend/src/pages/CompanyPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -32,12 +33,14 @@ import {
     ExclamationCircleOutlined,
     BuildOutlined,
     HomeOutlined,
-    TeamOutlined
+    TeamOutlined,
+    RobotOutlined  // НОВОЕ: Иконка для ИИ-анализа
 } from '@ant-design/icons';
 import styled from '@emotion/styled';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import FinancialCharts from '../components/company/FinancialCharts';
+import AIAnalysis from '../components/company/AIAnalysis';  // НОВОЕ: Импорт компонента ИИ-анализа
 import { getCompanyById, getCompanyAnalytics } from '../services/api';
 import { useSearch } from '../contexts/SearchContext';
 
@@ -463,7 +466,6 @@ const CompanyPage = () => {
                 const analyticsData = await getCompanyAnalytics(inn);
                 setAnalytics(analyticsData);
 
-                // НОВОЕ: Логируем данные предсказания
                 console.log('🔮 CompanyPage: Получены данные предсказания:', analyticsData.predicted_data);
             } catch (err) {
                 console.error('Error fetching company data:', err);
@@ -478,7 +480,7 @@ const CompanyPage = () => {
         }
     }, [inn]);
 
-    // ИСПРАВЛЕНИЕ: Функция для форматирования валюты (данные уже корректные)
+    // Функция для форматирования валюты (данные уже корректные)
     const formatCurrency = (value) => {
         if (!value || value === 0) return '0 ₽';
         return new Intl.NumberFormat('ru-RU', {
@@ -489,7 +491,7 @@ const CompanyPage = () => {
         }).format(value);
     };
 
-    // НОВАЯ ФУНКЦИЯ: Форматирование процентов
+    // Форматирование процентов
     const formatPercentage = (value) => {
         if (!value && value !== 0) return '0%';
         return `${value}%`;
@@ -743,7 +745,7 @@ const CompanyPage = () => {
                     <TabPane tab={<span><DollarOutlined />Финансы</span>} key="1">
                         {reports && reports.length > 0 ? (
                             <>
-                                {/* Ключевые показатели - ИСПРАВЛЕНИЕ: данные уже корректные */}
+                                {/* Ключевые показатели */}
                                 <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
                                     <Col xs={24} sm={8}>
                                         <GlassStatisticCard>
@@ -779,7 +781,7 @@ const CompanyPage = () => {
                                     </Col>
                                 </Row>
 
-                                {/* НОВОЕ: Графики с предсказанием */}
+                                {/* Графики с предсказанием */}
                                 <FinancialCharts
                                     chartData={chart_data}
                                     predictedData={predicted_data}
@@ -807,6 +809,11 @@ const CompanyPage = () => {
                         )}
                     </TabPane>
 
+                    {/* НОВАЯ ВКЛАДКА: ИИ-анализ */}
+                    <TabPane tab={<span><RobotOutlined />ИИ-анализ</span>} key="ai">
+                        <AIAnalysis company={company} />
+                    </TabPane>
+
                     {/* Владельцы */}
                     <TabPane tab={<span><UserOutlined />Владельцы</span>} key="2">
                         {company.owners?.fl && company.owners.fl.length > 0 && (
@@ -824,7 +831,6 @@ const CompanyPage = () => {
                                                     <Space direction="vertical">
                                                         <StyledText>Доля: {formatPercentage(owner.share)}</StyledText>
                                                         <StyledText>ИНН: {owner.inn}</StyledText>
-                                                        {/* ИСПРАВЛЕНИЕ: Размер доли уже корректный из API (деленный на 1000) */}
                                                         <StyledText>Размер доли: {formatCurrency(owner.captable_size)}</StyledText>
                                                         <StyledText>Дата: {formatDate(owner.date)}</StyledText>
                                                     </Space>
@@ -836,7 +842,7 @@ const CompanyPage = () => {
                             </>
                         )}
 
-                        {/* НОВОЕ: Добавляем учредителей юридических лиц */}
+                        {/* Учредители юридических лиц */}
                         {company.owners?.ul && company.owners.ul.length > 0 && (
                             <>
                                 <Divider style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />

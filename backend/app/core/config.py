@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
 import os
+
 
 class Settings(BaseSettings):
     # Database - теперь поддерживает PostgreSQL
@@ -12,6 +12,15 @@ class Settings(BaseSettings):
     # API Keys
     datanewton_api_key: str = "ET05PwvL9kHa"
 
+    # ИЗМЕНЕНО: Заменили OpenRouter на Anthropic
+    anthropic_api_key: str = os.getenv(
+        'ANTHROPIC_API_KEY', ''
+    )
+
+    anthropic_api_url: str = os.getenv(
+        'ANTHROPIC_API_URL', ''
+    )
+
     # External APIs
     rusprofile_base_url: str = "https://www.rusprofile.ru"
     datanewton_base_url: str = "https://api.datanewton.ru"
@@ -22,7 +31,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        # Разрешаем дополнительные поля из переменных окружения
         extra = "allow"
+
 
 settings = Settings()

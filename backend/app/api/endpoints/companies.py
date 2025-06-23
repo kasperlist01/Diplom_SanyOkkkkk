@@ -8,11 +8,80 @@ from app.schemas.search import SearchResponse
 from app.services.database_service import DatabaseService
 from app.services.datanewton_service import DataNewtonService
 from app.services.rusprofile_service import RusProfileService
-from app.services.prediction_service import FinancialPredictionService  # НОВОЕ
+from app.services.prediction_service import FinancialPredictionService
+from app.services.ai_analysis_service import AIAnalysisService
+from fastapi.responses import StreamingResponse
 import json
 
 router = APIRouter()
 
+
+@router.get("/{inn}/ai-analysis")
+async def get_company_ai_analysis(
+        inn: str,
+        db: Session = Depends(get_db)
+):
+    """Получить ИИ-анализ компании в потоковом режиме"""
+    try:
+        # Получаем данные компании
+        db_company = DatabaseService.get_company_by_inn(db, inn)
+        if not db_company:
+            raise HTTPException(status_code=404, detail="Компания не найдена")
+
+        # Получаем полную аналитику
+        datanewton_service = DataNewtonService()
+        rusprofile_service = RusProfileService()
+
+        counterparty_data = await datanewton_service.get_counterparty(inn)
+        finance_data = await datanewton_service.get_finance(inn)
+        rusprofile_data = await rusprofile_service.get_company_data(inn)
+
+        # Формируем детальную информацию о компании
+        company_detail = create_company_detail_from_db_and_api(
+            db_company, counterparty_data, rusprofile_data, inn
+        )
+
+        # Преобразуем финансовые данные
+        reports = []
+        if finance_data:
+            reports = convert_api_finance_to_reports(finance_data)
+
+        # Получаем похожие компании
+        similar_companies = get_similar_companies_from_db(db, db_company.okved, inn)
+
+        # Создаем ИИ-сервис и запускаем анализ
+        ai_service = AIAnalysisService()
+
+        def generate_analysis():
+            try:
+                for chunk in ai_service.analyze_company_stream(
+                        company_detail, reports, similar_companies
+                ):
+                    # Отправляем данные в формате Server-Sent Events
+                    yield f"data: {json.dumps({'content': chunk})}\n\n"
+
+                # Сигнал завершения
+                yield f"data: {json.dumps({'done': True})}\n\n"
+
+            except Exception as e:
+                error_message = f"**Ошибка анализа:** {str(e)}"
+                yield f"data: {json.dumps({'content': error_message, 'error': True})}\n\n"
+
+        return StreamingResponse(
+            generate_analysis(),
+            media_type="text/event-stream",  # ✅ Правильный MIME-тип
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/search", response_model=SearchResponse)
 async def search_companies(
