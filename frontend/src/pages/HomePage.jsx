@@ -100,32 +100,52 @@ const HomePage = () => {
 
     /* Запускаем поиск */
     const handleSearch = async (values, searchType) => {
-        // 1. Показываем спиннер
+        console.log('🚀 HomePage: Начинаем поиск:', { values, searchType });
+
+        // 1. ✅ Показываем спиннер СРАЗУ (только в кнопке)
         setLoading(true);
-        setError(null);
 
         try {
             let response;
+            console.log('📡 HomePage: Выбираем тип поиска:', searchType);
 
             switch (searchType) {
                 case 'name':
+                    console.log('🏢 HomePage: Поиск по названию:', values.name);
                     response = await searchCompaniesByName(values.name);
                     break;
                 case 'okved':
+                    console.log('📋 HomePage: Поиск по ОКВЭД:', values.okved);
                     response = await searchCompaniesByOkved(values.okved);
                     break;
                 default:
+                    console.log('🔍 HomePage: Универсальный поиск:', values);
                     response = await searchCompanies(values);
             }
 
-            // 2. Сохраняем результат (loading сбросится внутри)
+            console.log('✅ HomePage: Получили ответ:', {
+                companiesCount: response?.companies?.length || 0,
+                total: response?.total || 0
+            });
+
+            // 2. ✅ Сохраняем результат (loading сбросится внутри saveSearchResults)
             saveSearchResults(values, searchType, response);
+
         } catch (err) {
-            console.error('Ошибка поиска:', err);
+            console.error('❌ HomePage: Ошибка поиска:', err);
             setError(err.message || 'Ошибка при поиске предприятий');
         }
-        /* setLoading(false) выполняется либо в saveSearchResults, либо в setError */
+        // ✅ setLoading(false) выполняется либо в saveSearchResults, либо в setError
     };
+
+    // ✅ Добавляем логирование текущего состояния
+    console.log('🏠 HomePage: Текущее состояние:', {
+        loading,
+        hasResults: !!searchResults,
+        hasError: !!error,
+        hasSearched,
+        resultsCount: searchResults?.companies?.length || 0
+    });
 
     return (
         <Container>
@@ -144,7 +164,7 @@ const HomePage = () => {
             <SearchSection>
                 <SearchForm
                     onSearch={handleSearch}
-                    loading={loading}
+                    loading={loading} // ✅ Передаем состояние загрузки только в форму
                     initialValues={lastSearchParams}
                     initialSearchType={lastSearchType}
                 />
@@ -158,10 +178,10 @@ const HomePage = () => {
                 />
             )}
 
-            {/* ИСПРАВЛЕНИЕ: SearchResults всегда рендерится, но внутри себя решает что показывать */}
+            {/* ✅ SearchResults НЕ получает loading - показывает только результаты или ошибки */}
             <SearchResults
                 data={searchResults}
-                loading={loading}
+                loading={false} // ✅ НЕ передаем loading в SearchResults
                 error={error}
             />
         </Container>

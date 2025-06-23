@@ -21,32 +21,44 @@ export const SearchProvider = ({ children }) => {
     });
 
     const saveSearchResults = (params, type, results) => {
-        setSearchState({
+        console.log('📊 SearchContext: Сохраняем результаты поиска:', {
+            params,
+            type,
+            resultsCount: results?.companies?.length || 0,
+            total: results?.total || 0
+        });
+
+        setSearchState(prev => ({
+            ...prev,
             lastSearchParams: params,
             lastSearchType: type,
             searchResults: results,
-            loading: false,
+            loading: false, // ✅ Сбрасываем loading
             error: null,
             hasSearched: true
-        });
+        }));
     };
 
     const setLoading = (loading) => {
+        console.log('⏳ SearchContext: Устанавливаем loading:', loading);
         setSearchState(prev => ({
             ...prev,
-            loading
+            loading,
+            error: loading ? null : prev.error // Очищаем ошибку при начале загрузки
         }));
     };
 
     const setError = (error) => {
+        console.log('❌ SearchContext: Устанавливаем ошибку:', error);
         setSearchState(prev => ({
             ...prev,
             error,
-            loading: false
+            loading: false // ✅ Сбрасываем loading при ошибке
         }));
     };
 
     const clearResults = () => {
+        console.log('🧹 SearchContext: Очищаем результаты поиска');
         setSearchState({
             lastSearchParams: null,
             lastSearchType: null,
@@ -56,6 +68,14 @@ export const SearchProvider = ({ children }) => {
             hasSearched: false
         });
     };
+
+    // ✅ Добавляем логирование состояния
+    console.log('🔍 SearchContext: Текущее состояние:', {
+        loading: searchState.loading,
+        hasResults: !!searchState.searchResults,
+        hasError: !!searchState.error,
+        hasSearched: searchState.hasSearched
+    });
 
     return (
         <SearchContext.Provider value={{

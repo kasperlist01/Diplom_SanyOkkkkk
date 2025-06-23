@@ -279,7 +279,12 @@ def create_company_detail_from_db_and_api(db_company, counterparty_data, rusprof
         company_detail.registration_date = company_info.get('registration_date')
         company_detail.charter_capital = company_info.get('charter_capital')
         company_detail.status = company_info.get('status')
-        company_detail.owners = company_info.get('owners')
+
+        # ИСПРАВЛЕНИЕ: Обрабатываем данные владельцев
+        owners = company_info.get('owners')
+        if owners:
+            company_detail.owners = process_owners_data(owners)
+
         company_detail.managers = company_info.get('managers')
         company_detail.tax_mode_info = company_info.get('tax_mode_info')
 
@@ -295,6 +300,52 @@ def create_company_detail_from_db_and_api(db_company, counterparty_data, rusprof
         company_detail.rusprofile_data = rusprofile_data
 
     return company_detail
+
+
+def process_owners_data(owners):
+    """НОВАЯ ФУНКЦИЯ: Обрабатывает данные владельцев для корректного отображения"""
+    if not owners:
+        return owners
+
+    processed_owners = {}
+
+    # Обрабатываем физических лиц
+    if 'fl' in owners and owners['fl']:
+        processed_fl = []
+        for owner in owners['fl']:
+            processed_owner = owner.copy()
+
+            # Округляем долю до 2 знаков после запятой
+            if 'share' in processed_owner and processed_owner['share']:
+                try:
+                    share_value = float(processed_owner['share'])
+                    processed_owner['share'] = round(share_value, 2)
+                except (ValueError, TypeError):
+                    pass
+
+            processed_fl.append(processed_owner)
+
+        processed_owners['fl'] = processed_fl
+
+    # Обрабатываем юридических лиц аналогично
+    if 'ul' in owners and owners['ul']:
+        processed_ul = []
+        for owner in owners['ul']:
+            processed_owner = owner.copy()
+
+            # Округляем долю до 2 знаков после запятой
+            if 'share' in processed_owner and processed_owner['share']:
+                try:
+                    share_value = float(processed_owner['share'])
+                    processed_owner['share'] = round(share_value, 2)
+                except (ValueError, TypeError):
+                    pass
+
+            processed_ul.append(processed_owner)
+
+        processed_owners['ul'] = processed_ul
+
+    return processed_owners
 
 
 def extract_okved_from_api(company_info):

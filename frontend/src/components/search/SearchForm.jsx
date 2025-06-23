@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Row, Col, Typography, Select } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, LoadingOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 
 const { Title } = Typography;
@@ -62,7 +62,7 @@ const GlassInput = styled(Input)`
         color: rgba(255, 255, 255, 0.6);
     }
 
-    &:hover {
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.3);
     }
@@ -82,6 +82,14 @@ const GlassInput = styled(Input)`
             box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
         }
     }
+
+    /* ✅ Стили для отключенного состояния */
+    &:disabled {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        cursor: not-allowed !important;
+    }
 `;
 
 const SearchButton = styled(Button)`
@@ -97,6 +105,7 @@ const SearchButton = styled(Button)`
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    min-width: 200px;
 
     &::before {
         content: '';
@@ -109,7 +118,7 @@ const SearchButton = styled(Button)`
         transition: left 0.5s;
     }
 
-    &:hover {
+    &:hover:not(.ant-btn-loading):not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
         background: linear-gradient(135deg, #5b5fd8 0%, #7c3aed 50%, #9333ea 100%);
@@ -119,19 +128,64 @@ const SearchButton = styled(Button)`
         }
     }
 
-    &:focus {
+    &:focus:not(.ant-btn-loading):not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
         background: linear-gradient(135deg, #5b5fd8 0%, #7c3aed 50%, #9333ea 100%);
     }
 
-    &:active {
+    &:active:not(.ant-btn-loading):not(:disabled) {
         transform: translateY(0);
     }
 
+    /* ✅ ИСПРАВЛЕННЫЕ стили для состояния загрузки */
     &.ant-btn-loading {
+        cursor: not-allowed !important;
+        background: linear-gradient(135deg, #4c4fb8 0%, #6b46c1 50%, #7c2d92 100%) !important;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2) !important;
+        transform: none !important;
+
         &::before {
             display: none;
+        }
+
+        /* ✅ Анимация пульсации при загрузке */
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .ant-btn-loading-icon {
+            margin-right: 8px;
+
+            .anticon {
+                color: white !important;
+                font-size: 16px;
+            }
+        }
+    }
+
+    /* ✅ Стили для отключенного состояния (не загрузка) */
+    &:disabled:not(.ant-btn-loading) {
+        background: rgba(99, 102, 241, 0.3) !important;
+        box-shadow: none !important;
+        cursor: not-allowed;
+        transform: none !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
         }
     }
 
@@ -139,6 +193,7 @@ const SearchButton = styled(Button)`
         height: 48px;
         font-size: 14px;
         padding: 0 24px;
+        min-width: 160px;
     }
 `;
 
@@ -161,7 +216,7 @@ const GlassSelect = styled(Select)`
         }
     }
 
-    &:hover .ant-select-selector {
+    &:hover:not(.ant-select-disabled) .ant-select-selector {
         background: rgba(255, 255, 255, 0.2) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
     }
@@ -170,6 +225,14 @@ const GlassSelect = styled(Select)`
         background: rgba(255, 255, 255, 0.2) !important;
         border-color: rgba(99, 102, 241, 0.5) !important;
         box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+    }
+
+    /* ✅ Стили для отключенного состояния */
+    &.ant-select-disabled .ant-select-selector {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        cursor: not-allowed !important;
     }
 `;
 
@@ -182,7 +245,7 @@ const ResetButton = styled(Button)`
     font-weight: 500;
     transition: all 0.3s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.3);
         color: white;
@@ -190,10 +253,19 @@ const ResetButton = styled(Button)`
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     }
 
-    &:focus {
+    &:focus:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.3);
         color: white;
+    }
+
+    /* ✅ Стили для отключенного состояния */
+    &:disabled {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
+        cursor: not-allowed !important;
+        transform: none !important;
     }
 
     @media (max-width: 768px) {
@@ -201,22 +273,57 @@ const ResetButton = styled(Button)`
     }
 `;
 
+// ✅ НОВЫЙ стилизованный контейнер для кнопок с адаптивными отступами
+const ButtonContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+
+    @media (max-width: 576px) {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px; /* ✅ Увеличенный отступ между кнопками на мобильных */
+        
+        button {
+            width: 100%;
+            max-width: 280px; /* ✅ Ограничиваем максимальную ширину кнопок */
+        }
+    }
+
+    @media (min-width: 577px) and (max-width: 768px) {
+        gap: 12px; /* ✅ Средний отступ для планшетов */
+    }
+`;
+
 const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => {
     const [form] = Form.useForm();
     const [searchType, setSearchType] = useState(initialSearchType || 'universal');
 
+    // ✅ Добавляем логирование props
+    console.log('📝 SearchForm: Props:', {
+        loading,
+        initialValues,
+        initialSearchType,
+        searchType
+    });
+
     // Восстанавливаем значения формы при загрузке компонента
     useEffect(() => {
         if (initialValues) {
+            console.log('🔄 SearchForm: Восстанавливаем значения формы:', initialValues);
             form.setFieldsValue(initialValues);
         }
         if (initialSearchType) {
+            console.log('🔄 SearchForm: Восстанавливаем тип поиска:', initialSearchType);
             setSearchType(initialSearchType);
             form.setFieldsValue({ searchType: initialSearchType });
         }
     }, [initialValues, initialSearchType, form]);
 
     const handleSubmit = (values) => {
+        console.log('📤 SearchForm: Отправка формы:', values);
+
         // Фильтруем пустые значения и обрезаем пробелы
         const filteredValues = Object.entries(values)
             .filter(([key, value]) => key !== 'searchType' && value && value.trim())
@@ -234,14 +341,17 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                 };
             }, {});
 
-        console.log('Отправляем параметры поиска:', filteredValues);
+        console.log('✅ SearchForm: Отправляем параметры поиска:', filteredValues);
 
         if (Object.keys(filteredValues).length > 0) {
             onSearch(filteredValues, searchType);
+        } else {
+            console.log('⚠️ SearchForm: Нет параметров для поиска');
         }
     };
 
     const handleReset = () => {
+        console.log('🧹 SearchForm: Сброс формы');
         form.resetFields();
         setSearchType('universal');
     };
@@ -254,6 +364,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
     };
 
     const handleSearchTypeChange = (value) => {
+        console.log('🔄 SearchForm: Смена типа поиска:', value);
         setSearchType(value);
         // Очищаем форму при смене типа поиска, кроме случая когда восстанавливаем из контекста
         if (!initialSearchType || value !== initialSearchType) {
@@ -281,6 +392,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                             onChange={handleSearchTypeChange}
                             size="large"
                             value={searchType}
+                            disabled={loading} // ✅ Отключаем при загрузке
                         >
                             <Option value="universal">Универсальный поиск</Option>
                             <Option value="name">Только по названию</Option>
@@ -300,6 +412,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                             <GlassInput
                                 placeholder="Введите название"
                                 onChange={handleNameChange}
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
@@ -312,6 +425,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                             <GlassInput
                                 placeholder="Введите ИНН"
                                 maxLength={12}
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
@@ -323,6 +437,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                         >
                             <GlassInput
                                 placeholder="Например: 62.01"
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
@@ -334,6 +449,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                         >
                             <GlassInput
                                 placeholder="Код региона"
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
@@ -352,6 +468,7 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                                 placeholder="Введите название компании"
                                 size="large"
                                 onChange={handleNameChange}
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
@@ -369,33 +486,34 @@ const SearchForm = ({ onSearch, loading, initialValues, initialSearchType }) => 
                             <GlassInput
                                 placeholder="Введите код ОКВЭД (например: 62.01)"
                                 size="large"
+                                disabled={loading} // ✅ Отключаем при загрузке
                             />
                         </StyledFormItem>
                     </Col>
                 </Row>
             )}
 
-            <Row justify="center" gutter={[16, 0]} style={{ marginTop: 16 }}>
-                <Col>
-                    <SearchButton
-                        type="primary"
-                        htmlType="submit"
-                        loading={loading}
-                        icon={<SearchOutlined />}
-                        size="large"
-                    >
-                        Найти предприятия
-                    </SearchButton>
-                </Col>
-                <Col>
-                    <ResetButton
-                        onClick={handleReset}
-                        size="large"
-                    >
-                        Очистить
-                    </ResetButton>
-                </Col>
-            </Row>
+            {/* ✅ ИСПРАВЛЕНО: Используем новый ButtonContainer вместо Row/Col */}
+            <ButtonContainer>
+                <SearchButton
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading} // ✅ Используем встроенный loading
+                    icon={!loading ? <SearchOutlined /> : undefined} // ✅ Показываем иконку только когда не загружается
+                    size="large"
+                    disabled={loading} // ✅ Отключаем кнопку при загрузке
+                >
+                    {loading ? 'Поиск...' : 'Найти предприятия'} {/* ✅ Динамический текст */}
+                </SearchButton>
+
+                <ResetButton
+                    onClick={handleReset}
+                    size="large"
+                    disabled={loading} // ✅ Отключаем при загрузке
+                >
+                    Очистить
+                </ResetButton>
+            </ButtonContainer>
         </StyledForm>
     );
 };

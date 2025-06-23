@@ -486,6 +486,12 @@ const CompanyPage = () => {
         }).format(value);
     };
 
+    // НОВАЯ ФУНКЦИЯ: Форматирование процентов
+    const formatPercentage = (value) => {
+        if (!value && value !== 0) return '0%';
+        return `${value}%`;
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'Не указано';
         try {
@@ -810,10 +816,38 @@ const CompanyPage = () => {
                                                 title={<StyledText strong>{owner.name}</StyledText>}
                                                 description={
                                                     <Space direction="vertical">
-                                                        <StyledText>Доля: {owner.share}%</StyledText>
+                                                        <StyledText>Доля: {formatPercentage(owner.share)}</StyledText>
                                                         <StyledText>ИНН: {owner.inn}</StyledText>
-                                                        {/* ИСПРАВЛЕНИЕ: Размер доли уже корректный из API */}
-                                                        <StyledText>Размер доли: {formatCurrency(owner.captable_size * 1000)}</StyledText>
+                                                        {/* ИСПРАВЛЕНИЕ: Размер доли уже корректный из API (деленный на 1000) */}
+                                                        <StyledText>Размер доли: {formatCurrency(owner.captable_size)}</StyledText>
+                                                        <StyledText>Дата: {formatDate(owner.date)}</StyledText>
+                                                    </Space>
+                                                }
+                                            />
+                                        </List.Item>
+                                    )}
+                                />
+                            </>
+                        )}
+
+                        {/* НОВОЕ: Добавляем учредителей юридических лиц */}
+                        {company.owners?.ul && company.owners.ul.length > 0 && (
+                            <>
+                                <Divider style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+                                <StyledTitle level={4}>Учредители (юридические лица)</StyledTitle>
+                                <List
+                                    itemLayout="horizontal"
+                                    dataSource={company.owners.ul}
+                                    renderItem={(owner) => (
+                                        <List.Item style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                            <List.Item.Meta
+                                                avatar={<BankOutlined style={{ fontSize: 24, color: '#93c5fd' }} />}
+                                                title={<StyledText strong>{owner.name}</StyledText>}
+                                                description={
+                                                    <Space direction="vertical">
+                                                        <StyledText>Доля: {formatPercentage(owner.share)}</StyledText>
+                                                        <StyledText>ИНН: {owner.inn}</StyledText>
+                                                        <StyledText>Размер доли: {formatCurrency(owner.captable_size)}</StyledText>
                                                         <StyledText>Дата: {formatDate(owner.date)}</StyledText>
                                                     </Space>
                                                 }

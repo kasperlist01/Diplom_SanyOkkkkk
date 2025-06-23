@@ -14,22 +14,26 @@ const api = axios.create({
 // Интерцепторы для обработки ошибок
 api.interceptors.request.use(
     (config) => {
-        console.log('API Request:', config.method.toUpperCase(), config.url, config.params);
+        console.log('📡 API Request:', config.method.toUpperCase(), config.url, config.params);
         return config;
     },
     (error) => {
-        console.error('API Request Error:', error);
+        console.error('❌ API Request Error:', error);
         return Promise.reject(error);
     }
 );
 
 api.interceptors.response.use(
     (response) => {
-        console.log('API Response:', response.config.url, response.status, response.data);
+        console.log('✅ API Response:', response.config.url, response.status, {
+            companiesCount: response.data?.companies?.length,
+            total: response.data?.total,
+            dataKeys: Object.keys(response.data || {})
+        });
         return response;
     },
     (error) => {
-        console.error('API Response Error:', {
+        console.error('❌ API Response Error:', {
             url: error.config?.url,
             status: error.response?.status,
             data: error.response?.data,
@@ -56,11 +60,15 @@ api.interceptors.response.use(
 // Универсальный поиск компаний
 export const searchCompanies = async (params) => {
     try {
-        console.log('Отправляем поиск с параметрами:', params);
+        console.log('🔍 API: Отправляем универсальный поиск с параметрами:', params);
         const response = await api.get('/companies/search', { params });
+        console.log('✅ API: Универсальный поиск завершен:', {
+            found: response.data?.companies?.length || 0,
+            total: response.data?.total || 0
+        });
         return response.data;
     } catch (error) {
-        console.error('Ошибка поиска компаний:', error);
+        console.error('❌ API: Ошибка универсального поиска:', error);
         throw error;
     }
 };
@@ -68,12 +76,17 @@ export const searchCompanies = async (params) => {
 // Поиск компаний по названию
 export const searchCompaniesByName = async (name, limit = 100) => {
     try {
+        console.log('🏢 API: Поиск по названию:', { name, limit });
         const response = await api.get('/companies/search/by-name', {
             params: { name, limit }
         });
+        console.log('✅ API: Поиск по названию завершен:', {
+            found: response.data?.companies?.length || 0,
+            total: response.data?.total || 0
+        });
         return response.data;
     } catch (error) {
-        console.error('Ошибка поиска по названию:', error);
+        console.error('❌ API: Ошибка поиска по названию:', error);
         throw error;
     }
 };
@@ -81,12 +94,17 @@ export const searchCompaniesByName = async (name, limit = 100) => {
 // Поиск компаний по ОКВЭД
 export const searchCompaniesByOkved = async (okved, limit = 100) => {
     try {
+        console.log('📋 API: Поиск по ОКВЭД:', { okved, limit });
         const response = await api.get('/companies/search/by-okved', {
             params: { okved, limit }
         });
+        console.log('✅ API: Поиск по ОКВЭД завершен:', {
+            found: response.data?.companies?.length || 0,
+            total: response.data?.total || 0
+        });
         return response.data;
     } catch (error) {
-        console.error('Ошибка поиска по ОКВЭД:', error);
+        console.error('❌ API: Ошибка поиска по ОКВЭД:', error);
         throw error;
     }
 };
@@ -94,10 +112,12 @@ export const searchCompaniesByOkved = async (okved, limit = 100) => {
 // Получение детальной информации о компании
 export const getCompanyById = async (inn) => {
     try {
+        console.log('🏢 API: Получение информации о компании:', inn);
         const response = await api.get(`/companies/${inn}`);
+        console.log('✅ API: Информация о компании получена:', response.data?.name);
         return response.data;
     } catch (error) {
-        console.error('Ошибка получения компании:', error);
+        console.error('❌ API: Ошибка получения компании:', error);
         throw error;
     }
 };
@@ -105,10 +125,16 @@ export const getCompanyById = async (inn) => {
 // Получение аналитики компании
 export const getCompanyAnalytics = async (inn) => {
     try {
+        console.log('📊 API: Получение аналитики компании:', inn);
         const response = await api.get(`/companies/${inn}/analytics`);
+        console.log('✅ API: Аналитика компании получена:', {
+            companyName: response.data?.company?.name,
+            reportsCount: response.data?.reports?.length || 0,
+            similarCount: response.data?.similar_companies?.length || 0
+        });
         return response.data;
     } catch (error) {
-        console.error('Ошибка получения аналитики:', error);
+        console.error('❌ API: Ошибка получения аналитики:', error);
         throw error;
     }
 };

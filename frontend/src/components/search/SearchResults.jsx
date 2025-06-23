@@ -5,7 +5,6 @@ import { NumberOutlined, EnvironmentOutlined, ClearOutlined } from '@ant-design/
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../../contexts/SearchContext';
-import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 
 const { Title, Text } = Typography;
@@ -171,27 +170,61 @@ const EmptyStateTitle = styled(Title)`
     }
 `;
 
+// Стилизованная кнопка очистки
+const ClearButton = styled(Button)`
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    &:focus {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+`;
+
 const SearchResults = ({ data, loading, error }) => {
     const navigate = useNavigate();
     const { clearResults } = useSearch();
 
-    // ИСПРАВЛЕНИЕ: Показываем спиннер во время загрузки
-    if (loading) {
-        return <LoadingSpinner type="search" tip="Поиск компаний..." />;
-    }
+    // ✅ Добавляем логирование props
+    console.log('📋 SearchResults: Props:', {
+        loading,
+        hasData: !!data,
+        hasError: !!error,
+        companiesCount: data?.companies?.length || 0,
+        total: data?.total || 0
+    });
+
+    // ✅ ИСПРАВЛЕНИЕ: НЕ показываем спиннер при загрузке - только индикатор в кнопке
+    // Убираем LoadingSpinner отсюда полностью
 
     // Показываем ошибку
     if (error) {
+        console.log('❌ SearchResults: Показываем ошибку:', error);
         return <ErrorMessage message={error} />;
     }
 
-    // ИСПРАВЛЕНИЕ: Если нет данных И не было поиска, не показываем ничего
+    // ✅ Если нет данных И не было поиска, не показываем ничего
     if (!data) {
+        console.log('📭 SearchResults: Нет данных для отображения');
         return null; // Не показываем пустое состояние до первого поиска
     }
 
     // Показываем пустое состояние только если был выполнен поиск, но результатов нет
     if (!data.companies || data.companies.length === 0) {
+        console.log('🔍 SearchResults: Поиск выполнен, но результатов нет');
         return (
             <GlassResultsCard>
                 <div style={{ textAlign: 'center', padding: '48px 0' }}>
@@ -207,27 +240,24 @@ const SearchResults = ({ data, loading, error }) => {
     }
 
     const handleCompanyClick = (company) => {
+        console.log('🏢 SearchResults: Переход к компании:', company.inn);
         navigate(`/company/${company.inn}`);
     };
 
+    console.log('✅ SearchResults: Отображаем результаты:', data.companies.length);
+
     return (
         <GlassResultsCard>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
                 <ResultsTitle level={3} style={{ margin: 0 }}>
                     Найдено предприятий: {data.total} (показано: {data.companies.length})
                 </ResultsTitle>
-                <Button
+                <ClearButton
                     icon={<ClearOutlined />}
                     onClick={clearResults}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        borderRadius: '12px'
-                    }}
                 >
                     Очистить результаты
-                </Button>
+                </ClearButton>
             </div>
 
             <Row gutter={[16, 16]}>
