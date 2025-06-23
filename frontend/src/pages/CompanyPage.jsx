@@ -462,6 +462,9 @@ const CompanyPage = () => {
 
                 const analyticsData = await getCompanyAnalytics(inn);
                 setAnalytics(analyticsData);
+
+                // НОВОЕ: Логируем данные предсказания
+                console.log('🔮 CompanyPage: Получены данные предсказания:', analyticsData.predicted_data);
             } catch (err) {
                 console.error('Error fetching company data:', err);
                 setError('Ошибка при загрузке данных о компании');
@@ -547,7 +550,7 @@ const CompanyPage = () => {
         return <ErrorMessage message="Компания не найдена" />;
     }
 
-    const { company, reports, chart_data, similar_companies } = analytics;
+    const { company, reports, chart_data, similar_companies, predicted_data } = analytics;
     const rusprofileData = company.rusprofile_data?.data || {};
     const statusInfo = getStatusInfo(company.status);
 
@@ -563,13 +566,13 @@ const CompanyPage = () => {
             title: 'Выручка',
             dataIndex: 'revenue_cur',
             key: 'revenue_cur',
-            render: (value) => formatCurrency(value), // ИСПРАВЛЕНИЕ: Данные уже корректные
+            render: (value) => formatCurrency(value),
         },
         {
             title: 'Валовая прибыль',
             dataIndex: 'gross_profit_cur',
             key: 'gross_profit_cur',
-            render: (value) => formatCurrency(value), // ИСПРАВЛЕНИЕ: Данные уже корректные
+            render: (value) => formatCurrency(value),
         },
         {
             title: 'Чистая прибыль',
@@ -577,7 +580,7 @@ const CompanyPage = () => {
             key: 'net_profit_cur',
             render: (value) => (
                 <StyledText style={{ color: value >= 0 ? '#bbf7d0' : '#fecaca' }}>
-                    {formatCurrency(value)} {/* ИСПРАВЛЕНИЕ: Данные уже корректные */}
+                    {formatCurrency(value)}
                 </StyledText>
             ),
         },
@@ -585,7 +588,7 @@ const CompanyPage = () => {
             title: 'Активы',
             dataIndex: 'balance_assets_eoy',
             key: 'balance_assets_eoy',
-            render: (value) => formatCurrency(value), // ИСПРАВЛЕНИЕ: Данные уже корректные
+            render: (value) => formatCurrency(value),
         },
     ];
 
@@ -776,8 +779,11 @@ const CompanyPage = () => {
                                     </Col>
                                 </Row>
 
-                                {/* Графики */}
-                                <FinancialCharts chartData={chart_data} />
+                                {/* НОВОЕ: Графики с предсказанием */}
+                                <FinancialCharts
+                                    chartData={chart_data}
+                                    predictedData={predicted_data}
+                                />
 
                                 {/* Таблица отчетов */}
                                 <StyledTitle level={4} style={{ marginTop: 32 }}>

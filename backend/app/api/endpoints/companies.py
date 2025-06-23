@@ -8,6 +8,7 @@ from app.schemas.search import SearchResponse
 from app.services.database_service import DatabaseService
 from app.services.datanewton_service import DataNewtonService
 from app.services.rusprofile_service import RusProfileService
+from app.services.prediction_service import FinancialPredictionService  # НОВОЕ
 import json
 
 router = APIRouter()
@@ -236,12 +237,70 @@ async def get_company_analytics(
         # ИСПРАВЛЕНИЕ: Получаем похожие компании используя ОКВЭД из БД
         similar_companies = get_similar_companies_from_db(db, db_company.okved, inn)
 
+        # НОВОЕ: Генерируем предсказание на следующий год
+        predicted_data = None
+        if reports and len(reports) >= 2:
+            try:
+                predicted_data = FinancialPredictionService.predict_next_year(reports)
+                print(f"Предсказание для {inn}: {predicted_data}")
+            except Exception as e:
+                print(f"Ошибка предсказания для {inn}: {e}")
+
         return CompanyAnalytics(
             company=company_detail,
             reports=reports,
             chart_data=chart_data,
-            similar_companies=similar_companies
+            similar_companies=similar_companies,
+            predicted_data=predicted_data  # НОВОЕ
         )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# НОВЫЙ ЭНДПОИНТ: Получение предсказания отдельно
+@router.get("/{inn}/prediction")
+async def get_company_prediction(
+        inn: str,
+        db: Session = Depends(get_db)
+):
+    """Получить предсказание финансовых показателей на следующий год"""
+    try:
+        # Получаем компанию из БД
+        db_company = DatabaseService.get_company_by_inn(db, inn)
+        if not db_company:
+            raise HTTPException(status_code=404, detail="Компания не найдена")
+
+        # Получаем финансовые данные
+        datanewton_service = DataNewtonService()
+        finance_data = await datanewton_service.get_finance(inn)
+
+        if not finance_data:
+            raise HTTPException(status_code=404, detail="Финансовые данные не найдены")
+
+        # Преобразуем в отчеты
+        reports = convert_api_finance_to_reports(finance_data)
+
+        if len(reports) < 2:
+            raise HTTPException(status_code=400, detail="Недостаточно данных для предсказания (нужно минимум 2 года)")
+
+        # Генерируем предсказание
+        predicted_data = FinancialPredictionService.predict_next_year(reports)
+
+        if not predicted_data:
+            raise HTTPException(status_code=500, detail="Не удалось сгенерировать предсказание")
+
+        # Получаем объяснение предсказания
+        explanation = FinancialPredictionService.get_prediction_explanation(predicted_data, reports)
+
+        return {
+            "prediction": predicted_data,
+            "explanation": explanation,
+            "base_data_years": len(reports),
+            "last_year": max(report.year for report in reports)
+        }
 
     except HTTPException:
         raise

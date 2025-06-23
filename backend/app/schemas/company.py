@@ -61,8 +61,23 @@ class FinancialReport(BaseModel):
         from_attributes = True
 
 
+# НОВОЕ: Схема для предсказанных данных
+class PredictedFinancialData(BaseModel):
+    year: int
+    revenue_cur: Optional[float] = None
+    net_profit_cur: Optional[float] = None
+    balance_assets_eoy: Optional[float] = None
+    equity_eoy: Optional[float] = None
+    confidence: Optional[float] = None  # Уверенность в предсказании (0-1)
+
+    class Config:
+        from_attributes = True
+
+
 class CompanyAnalytics(BaseModel):
     company: CompanyDetail
     reports: List[FinancialReport]
     chart_data: Dict[str, Any]
     similar_companies: List[CompanySearch]
+    # НОВОЕ: Добавляем предсказанные данные
+    predicted_data: Optional[PredictedFinancialData] = None

@@ -22,5 +22,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        # Разрешаем дополнительные поля из переменных окружения
+        extra = "allow"
 
 settings = Settings()
