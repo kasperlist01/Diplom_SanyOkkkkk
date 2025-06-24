@@ -175,7 +175,7 @@ const FinancialCharts = ({ chartData, predictedData }) => {
 
     const chartDataWithPrediction = prepareChartDataWithPrediction();
 
-    // ✅ ИСПРАВЛЕНО: Функция для создания опций графика с предсказанием в той же серии
+    // ✅ ИСПРАВЛЕНО: Функция для создания опций графика с безопасным formatter
     const createChartOptions = (title, dataKey, color, gradientColor) => {
         const data = chartDataWithPrediction[dataKey];
         const years = chartDataWithPrediction.years;
@@ -292,7 +292,17 @@ const FinancialCharts = ({ chartData, predictedData }) => {
 
                     const param = params[0];
                     const year = param.axisValue;
-                    const value = param.value.value || param.value;
+
+                    // ✅ Безопасное получение значения
+                    let value;
+                    if (param.value && typeof param.value === 'object' && param.value.value !== undefined) {
+                        value = param.value.value;
+                    } else if (typeof param.value === 'number') {
+                        value = param.value;
+                    } else {
+                        value = 0;
+                    }
+
                     const isPredicted = showPrediction && predictedData && year == predictedData.year;
 
                     const prefix = isPredicted ? '🔮 Прогноз на ' : '';
